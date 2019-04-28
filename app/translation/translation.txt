@@ -1,0 +1,4 @@
+We pass the first few thousand displays of each application through the Admob and Adcolony ad networks (in the case of video ads). This is how we analyze your traffic and turn on the most suitable networks with correct settings which are right for you.
+Each network will be trained on your traffic for some time and give unstable output. 
+But no worries, the network takes several thousand displays to learn for each application (if there is a good traffic, this process won't be perceptible at all), after which the eCPM should be stable. 
+First of all, I would like to recommend this: start up all traffic and look at the result. For a real evaluation of the statistics, it's necessary to achieve at least 2-3 thousand stable views per day separately for each application. 
