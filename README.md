@@ -1,1 +1,1 @@
-# Small application with Appodeal SDK integration
+### Small application with Appodeal SDK integration
