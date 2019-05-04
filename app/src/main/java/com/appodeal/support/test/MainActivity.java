@@ -22,14 +22,20 @@ import java.util.List;
 public class MainActivity extends AppCompatActivity {
 
     public static final String APP_KEY = "625d2c10e9c5a41641778c062cf499fac2e7c5b56e3cdf19";
+    // todo
+    public static final int interstitialTime = 15000;
+    public static final int bannerTime = 5000;
 
-    private TextView counter;
     private Button mButton;
     private ListView mListView;
+    private TextView counter;
 
     private boolean isFirstThirtySeconds = true;
-    private boolean isNativeVisible = false;
     private List<NativeAd> mNativeAdList;
+    private int interstitialTimerMoment;
+    private int bannerTimerMoment;
+    private boolean isInterstitial = false;
+    private boolean bannerShowed = false;
 
     CountDownTimer staticInterstitialTimer;
     CountDownTimer bannerTimer;
@@ -39,8 +45,8 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        counter = findViewById(R.id.counter);
         mButton = findViewById(R.id.button);
+        counter = findViewById(R.id.counter);
         mListView = findViewById(R.id.list_view);
         mListView.setVisibility(View.INVISIBLE);
 
@@ -57,7 +63,61 @@ public class MainActivity extends AppCompatActivity {
         showBanner();
     }
 
+    @Override
+    protected void onStop() {
+        super.onStop();
+        // stop timers
+        staticInterstitialTimer.cancel();
+        bannerTimer.cancel();
+        // get interstitial interval
+        if (!counter.getText().equals("")) {
+            interstitialTimerMoment = Integer.parseInt(counter.getText().toString());
+        }
+    }
+
+    @Override
+    protected void onRestart() {
+        super.onRestart();
+
+        if (!isInterstitial) {
+            staticInterstitialTimer = new CountDownTimer(interstitialTimerMoment * 1000, 1000) {
+                @Override
+                public void onTick(long l) {
+                    counter.setText(String.valueOf(l / 1000));
+                }
+
+                @Override
+                public void onFinish() {
+                    showInterstitial();
+                    if (isFirstThirtySeconds) {
+                        isFirstThirtySeconds = false;
+                    }
+                    setUpInterstitialTimer();
+                }
+            };
+        }
+
+        if (!bannerShowed) {
+            bannerTimer = new CountDownTimer(bannerTimerMoment * 1000, 1000) {
+
+                @Override
+                public void onTick(long l) {
+                    bannerTimerMoment = (int) l / 1000;
+                }
+
+                @Override
+                public void onFinish() {
+                    hideBanner();
+                }
+            };
+        }
+        // start timers from new time
+        staticInterstitialTimer.start();
+        bannerTimer.start();
+    }
+
     public void showInterstitial() {
+        isInterstitial = true;
         Appodeal.show(this, Appodeal.INTERSTITIAL);
     }
 
@@ -67,6 +127,7 @@ public class MainActivity extends AppCompatActivity {
 
     public void hideBanner() {
         Appodeal.hide(this, Appodeal.BANNER_TOP);
+        bannerShowed = true;
     }
 
     public void setUpInterstitialCallbacks() {
@@ -79,7 +140,6 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void onInterstitialLoaded(boolean b) {
-
             }
 
             @Override
@@ -89,7 +149,6 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void onInterstitialShown() {
-
             }
 
             @Override
@@ -134,7 +193,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void setUpInterstitialTimer() {
-        staticInterstitialTimer = new CountDownTimer(30000, 1000) {
+        staticInterstitialTimer = new CountDownTimer(interstitialTime, 1000) {
 
             @Override
             public void onTick(long millisUntilFinished) {
@@ -144,7 +203,6 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void onFinish() {
-                staticInterstitialTimer.cancel();
                 showInterstitial();
                 if (isFirstThirtySeconds) {
                     isFirstThirtySeconds = false;
@@ -154,10 +212,11 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void setUpBannerTimer() {
-        bannerTimer = new CountDownTimer(5000, 5000) {
+        bannerTimer = new CountDownTimer(bannerTime, 1000) {
             @Override
             public void onTick(long l) {
-                // do nothing
+                bannerTimerMoment = (int) l / 1000;
+                System.out.println(bannerTimerMoment);
             }
 
             @Override
@@ -170,8 +229,8 @@ public class MainActivity extends AppCompatActivity {
 
     public void initializeSDK() {
         Appodeal.setAutoCache(Appodeal.NATIVE, false);
-        Appodeal.initialize(this, APP_KEY, Appodeal.INTERSTITIAL | Appodeal.BANNER_TOP | Appodeal.NATIVE, true);
         Appodeal.setTesting(true);
+        Appodeal.initialize(this, APP_KEY, Appodeal.INTERSTITIAL | Appodeal.BANNER_TOP | Appodeal.NATIVE, true);
         Appodeal.cache(this, Appodeal.NATIVE, 5);
 
         // set up Ad callbacks
@@ -183,13 +242,9 @@ public class MainActivity extends AppCompatActivity {
     public void buttonAction(View view) {
         if (isFirstThirtySeconds) {
             staticInterstitialTimer.cancel();
+            counter.setText("");
         }
-        if (!isNativeVisible) {
-            mListView.setVisibility(View.VISIBLE);
-        } else {
-            mListView.setVisibility(View.INVISIBLE);
-        }
-        isNativeVisible = !isNativeVisible;
+        mListView.setVisibility(View.VISIBLE);
     }
 
     public void setUpNativeCallbacks() {
