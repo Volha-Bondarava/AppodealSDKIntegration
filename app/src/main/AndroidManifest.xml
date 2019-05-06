@@ -8,7 +8,6 @@
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" /> <!--optional -->
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" /> <!--optional -->
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" /> <!--optional-->
-
     <uses-permission android:name="android.permission.READ_PHONE_STATE" /> <!--optional-->
 
     <!-- GPS support -->

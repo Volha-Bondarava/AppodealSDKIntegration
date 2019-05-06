@@ -14,16 +14,17 @@ import com.appodeal.ads.Appodeal;
 import com.appodeal.ads.BannerCallbacks;
 import com.appodeal.ads.InterstitialCallbacks;
 import com.appodeal.ads.NativeAd;
-import com.appodeal.ads.NativeCallbacks;
 import com.appodeal.ads.native_ad.views.NativeAdViewNewsFeed;
+import com.appodeal.ads.utils.Log;
+import com.appodealx.sdk.AppodealX;
 
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
 
     public static final String APP_KEY = "625d2c10e9c5a41641778c062cf499fac2e7c5b56e3cdf19";
-    // todo
-    public static final int interstitialTime = 15000;
+
+    public static final int interstitialTime = 30000;
     public static final int bannerTime = 5000;
 
     private Button mButton;
@@ -66,6 +67,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onStop() {
         super.onStop();
+
         // stop timers
         staticInterstitialTimer.cancel();
         bannerTimer.cancel();
@@ -111,18 +113,22 @@ public class MainActivity extends AppCompatActivity {
                 }
             };
         }
-        // start timers from new time
+        // start timers from the new time
         staticInterstitialTimer.start();
         bannerTimer.start();
     }
 
     public void showInterstitial() {
         isInterstitial = true;
-        Appodeal.show(this, Appodeal.INTERSTITIAL);
+        if (Appodeal.isLoaded(Appodeal.INTERSTITIAL)) {
+            Appodeal.show(this, Appodeal.INTERSTITIAL);
+        }
     }
 
     public void showBanner() {
-        Appodeal.show(this, Appodeal.BANNER_TOP);
+        if (Appodeal.isLoaded(Appodeal.BANNER_TOP)) {
+            Appodeal.show(this, Appodeal.BANNER_TOP);
+        }
     }
 
     public void hideBanner() {
@@ -153,12 +159,10 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void onInterstitialClicked() {
-
             }
 
             @Override
             public void onInterstitialExpired() {
-
             }
         });
     }
@@ -167,12 +171,10 @@ public class MainActivity extends AppCompatActivity {
         Appodeal.setBannerCallbacks(new BannerCallbacks() {
             @Override
             public void onBannerLoaded(int i, boolean b) {
-
             }
 
             @Override
             public void onBannerFailedToLoad() {
-
             }
 
             @Override
@@ -182,12 +184,10 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void onBannerClicked() {
-
             }
 
             @Override
             public void onBannerExpired() {
-
             }
         });
     }
@@ -216,7 +216,6 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onTick(long l) {
                 bannerTimerMoment = (int) l / 1000;
-                System.out.println(bannerTimerMoment);
             }
 
             @Override
@@ -232,11 +231,14 @@ public class MainActivity extends AppCompatActivity {
         Appodeal.setTesting(true);
         Appodeal.initialize(this, APP_KEY, Appodeal.INTERSTITIAL | Appodeal.BANNER_TOP | Appodeal.NATIVE, true);
         Appodeal.cache(this, Appodeal.NATIVE, 5);
+        // set logging
+        AppodealX.setLogging(true);
+        Appodeal.setLogLevel(Log.LogLevel.verbose);
 
         // set up Ad callbacks
-        setUpNativeCallbacks();
         setUpBannerCallbacks();
         setUpInterstitialCallbacks();
+
     }
 
     public void buttonAction(View view) {
@@ -244,37 +246,12 @@ public class MainActivity extends AppCompatActivity {
             staticInterstitialTimer.cancel();
             counter.setText("");
         }
+
+        if (Appodeal.isLoaded(Appodeal.NATIVE)) {
+            mNativeAdList = Appodeal.getNativeAds(5);
+            mListView.setAdapter(new ListAdapter());
+        }
         mListView.setVisibility(View.VISIBLE);
-    }
-
-    public void setUpNativeCallbacks() {
-        Appodeal.setNativeCallbacks(new NativeCallbacks() {
-            @Override
-            public void onNativeLoaded() {
-                mNativeAdList = Appodeal.getNativeAds(5);
-                mListView.setAdapter(new ListAdapter());
-            }
-
-            @Override
-            public void onNativeFailedToLoad() {
-
-            }
-
-            @Override
-            public void onNativeShown(NativeAd nativeAd) {
-
-            }
-
-            @Override
-            public void onNativeClicked(NativeAd nativeAd) {
-
-            }
-
-            @Override
-            public void onNativeExpired() {
-
-            }
-        });
     }
 
     private class ListAdapter extends BaseAdapter {
@@ -298,9 +275,8 @@ public class MainActivity extends AppCompatActivity {
             if (view == null) {
                 view = getLayoutInflater().inflate(R.layout.list_item, viewGroup, false);
             }
-            NativeAdViewNewsFeed nativeAdViewNewsFeed = (NativeAdViewNewsFeed) view;
-            nativeAdViewNewsFeed.setNativeAd((NativeAd) getItem(i));
-            return nativeAdViewNewsFeed;
+            ((NativeAdViewNewsFeed) view).setNativeAd((NativeAd) getItem(i));
+            return view;
         }
     }
 }
