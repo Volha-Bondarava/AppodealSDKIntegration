@@ -3,6 +3,7 @@ package com.appodeal.support.test;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.support.v7.app.AppCompatActivity;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
@@ -137,7 +138,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void setUpInterstitialCallbacks() {
-
         Appodeal.setInterstitialCallbacks(new InterstitialCallbacks() {
             @Override
             public void onInterstitialClosed() {
@@ -250,8 +250,8 @@ public class MainActivity extends AppCompatActivity {
         if (Appodeal.isLoaded(Appodeal.NATIVE)) {
             mNativeAdList = Appodeal.getNativeAds(5);
             mListView.setAdapter(new ListAdapter());
+            mListView.setVisibility(View.VISIBLE);
         }
-        mListView.setVisibility(View.VISIBLE);
     }
 
     private class ListAdapter extends BaseAdapter {
@@ -273,10 +273,12 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public View getView(int i, View view, ViewGroup viewGroup) {
             if (view == null) {
-                view = getLayoutInflater().inflate(R.layout.list_item, viewGroup, false);
+                view = LayoutInflater.from(viewGroup.getContext()).inflate(R.layout.list_item, viewGroup, false);
             }
-            ((NativeAdViewNewsFeed) view).setNativeAd((NativeAd) getItem(i));
-            return view;
+            NativeAdViewNewsFeed nativeAdViewNewsFeed = view.findViewById(R.id.native_ad_view_news_feed);
+            nativeAdViewNewsFeed.registerView((NativeAd) getItem(i));
+            nativeAdViewNewsFeed.setNativeAd((NativeAd) getItem(i));
+            return nativeAdViewNewsFeed;
         }
     }
 }
