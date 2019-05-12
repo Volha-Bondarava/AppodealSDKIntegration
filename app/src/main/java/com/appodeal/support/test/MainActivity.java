@@ -8,14 +8,17 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.Button;
+import android.widget.FrameLayout;
 import android.widget.ListView;
+import android.widget.RatingBar;
 import android.widget.TextView;
 
 import com.appodeal.ads.Appodeal;
 import com.appodeal.ads.BannerCallbacks;
 import com.appodeal.ads.InterstitialCallbacks;
 import com.appodeal.ads.NativeAd;
-import com.appodeal.ads.native_ad.views.NativeAdViewNewsFeed;
+import com.appodeal.ads.NativeAdView;
+import com.appodeal.ads.NativeIconView;
 import com.appodeal.ads.utils.Log;
 import com.appodealx.sdk.AppodealX;
 
@@ -127,7 +130,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void showBanner() {
-        if (Appodeal.isLoaded(Appodeal.BANNER_TOP)) {
+        if (!Appodeal.isLoaded(Appodeal.BANNER_TOP)) {
             Appodeal.show(this, Appodeal.BANNER_TOP);
         }
     }
@@ -273,12 +276,48 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public View getView(int i, View view, ViewGroup viewGroup) {
             if (view == null) {
-                view = LayoutInflater.from(viewGroup.getContext()).inflate(R.layout.list_item, viewGroup, false);
+                view = LayoutInflater.from(viewGroup.getContext()).inflate(R.layout.item_layout, viewGroup, false);
             }
-            NativeAdViewNewsFeed nativeAdViewNewsFeed = view.findViewById(R.id.native_ad_view_news_feed);
-            nativeAdViewNewsFeed.registerView((NativeAd) getItem(i));
-            nativeAdViewNewsFeed.setNativeAd((NativeAd) getItem(i));
-            return nativeAdViewNewsFeed;
+
+            NativeAd nativeAd = (NativeAd) getItem(i);
+
+            NativeAdView nativeAdView = view.findViewById(R.id.native_ad_view);
+
+            TextView titleView = view.findViewById(R.id.title_view);
+            titleView.setText(nativeAd.getTitle());
+            nativeAdView.setTitleView(titleView);
+
+            RatingBar ratingBar = view.findViewById(R.id.rating_bar);
+            if (nativeAd.getRating() == 0) {
+                ratingBar.setVisibility(View.INVISIBLE);
+            } else {
+                ratingBar.setVisibility(View.VISIBLE);
+                ratingBar.setRating(nativeAd.getRating());
+                ratingBar.setStepSize(0.1f);
+            }
+            nativeAdView.setRatingView(ratingBar);
+
+            View providerView = nativeAd.getProviderView(viewGroup.getContext());
+            if (providerView != null) {
+                if (providerView.getParent() != null && providerView.getParent() instanceof ViewGroup) {
+                    ((ViewGroup) providerView.getParent()).removeView(providerView);
+                }
+                FrameLayout providerViewContainer = (FrameLayout) nativeAdView.findViewById(R.id.provider_view);
+                ViewGroup.LayoutParams layoutParams = new ViewGroup.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+                providerViewContainer.addView(providerView, layoutParams);
+            }
+            nativeAdView.setProviderView(providerView);
+
+            Button callToAction = view.findViewById(R.id.call_to_action);
+            callToAction.setText(nativeAd.getCallToAction());
+            nativeAdView.setCallToActionView(callToAction);
+
+            NativeIconView nativeIconView = view.findViewById(R.id.native_icon_view);
+            nativeAdView.setNativeIconView(nativeIconView);
+
+            nativeAdView.registerView(nativeAd);
+
+            return view;
         }
     }
 }
